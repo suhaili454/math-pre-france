@@ -58,6 +58,7 @@ function qf(q, lang, f, sub) {
   const fr = q.i18n && q.i18n.fr; if (!fr) return qf(q, "en", f, sub);
   const v = fr[f]; return sub ? v[sub] : v;
 }
+const figHTML = q => q.figure ? `<div class="fig">${q.figure}</div>` : "";
 const bl = (o, lang) => (o && (o[lang] != null ? o[lang] : o.en)) || "";
 /* two-language block: main + muted other */
 function dual(getter) {
@@ -175,7 +176,7 @@ function renderQ() {
   const seqTag = q.sequence_id ? `<span class="chip cy">${esc(t("checkpoint"))} ${q.sequence_index}/3 · ${esc(t("seq"))}</span>` : "";
   app(`<div class="row sp"><a href="#/topic/${encodeURIComponent(SESS.tid || q.topic_id)}">← ${esc(t("back"))}</a><span class="muted small">${SESS.i + 1}/${n}</span></div><div class="pgs">${pg}</div>
   <div class="card"><div class="row" style="margin-bottom:4px"><span class="chip">${"★".repeat(q.difficulty)}</span>${seqTag}<span class="chip">${esc(topicById[q.topic_id] ? topicById[q.topic_id][CL()] : "")}</span></div>
-  <div class="stem">${dual(l => qf(q, l, "stem"))}</div><div id="ch">${choicesHTML(q, ST, false)}</div>
+  <div class="stem">${dual(l => qf(q, l, "stem"))}</div>${figHTML(q)}<div id="ch">${choicesHTML(q, ST, false)}</div>
   <div class="row" style="margin-top:8px"><button class="btn pri" id="ok" disabled>${esc(t("check"))}</button></div><div id="fb"></div></div><div id="after"></div>`);
   bindChoices(q);
   $("#ok").onclick = () => checkAnswer(q);
@@ -277,7 +278,7 @@ function runMock() {
   const answered = m.ids.filter(id => m.ans[id]).length;
   app(`<div class="row sp"><span class="timer" id="tm">⏱ ${fmt(m.left)}</span><span class="muted small">${m.i + 1}/${m.ids.length} · ${answered} ${esc(t("answered"))}</span></div>
   <div class="pgs">${m.ids.map((id, i) => `<i data-i="${i}" style="cursor:pointer" class="${m.ans[id] ? "d" : ""} ${i === m.i ? "c" : ""}"></i>`).join("")}</div>
-  <div class="card"><div class="stem">${dual(l => qf(q, l, "stem"))}</div>
+  <div class="card"><div class="stem">${dual(l => qf(q, l, "stem"))}</div>${figHTML(q)}
   <div id="ch">${"ABCD".split("").map(k => `<button class="opt ${m.ans[q.question_id] === k ? "sel" : ""}" data-k="${k}"><span class="k">${k}</span><span class="t">${dual(l => qf(q, l, "choices", k))}</span></button>`).join("")}</div>
   ${q.route_choice ? `<h3 style="margin-top:14px">🧭 ${esc(t("routeQ"))}</h3><div id="rch">${q.route_choice.options.map(o => `<button class="opt ${m.route[q.question_id] === o.option_id ? "sel" : ""}" data-k="${o.option_id}"><span class="k">${o.option_id}</span><span class="t">${dualBL(o.text)}</span></button>`).join("")}</div>` : ""}</div>
   <div class="row sp"><button class="btn" id="pv" ${m.i ? "" : "disabled"}>←</button><button class="btn pri" id="sb">${esc(t("submit"))}</button><button class="btn" id="nx" ${m.i < m.ids.length - 1 ? "" : "disabled"}>→</button></div>`);
@@ -302,7 +303,7 @@ function submitMock(timeUp) {
   app(`<h1>${timeUp ? esc(t("timeUp")) + " — " : ""}${esc(t("score"))}</h1><div class="card"><div class="score">${fm(mark)}/20</div>
    <div class="muted">${esc(t("resultScore"))}: ${got}/${max} · ${esc(t("routeScore"))}: ${fm(rg)}/${rm}</div><p class="muted small">${esc(t("official"))}</p></div>
    <h2>${esc(t("review"))}</h2>` + rows.map((r, i) => `<details class="card"><summary>${i + 1}. ${r.ok ? "✅" : "❌"} ${r.a ? esc(r.a) : esc(t("noans"))} → ${r.q.correct_choice}${r.q.route_choice ? ` · 🧭 ${r.ro ? esc(r.ro.verdict) : esc(t("noans"))}` : ""}</summary>
-     <div class="stem">${dual(l => qf(r.q, l, "stem"))}</div>
+     <div class="stem">${dual(l => qf(r.q, l, "stem"))}</div>${figHTML(r.q)}
      ${r.a && !r.ok ? `<div class="fb bad">${dual(l => qf(r.q, l, "distractor_reason", r.a))}</div>` : ""}
      <div class="fb am"><b>${esc(t("reveal"))}:</b> ${r.q.correct_choice}) ${dual(l => qf(r.q, l, "choices", r.q.correct_choice))}</div>
      ${r.ro ? `<div class="fb ${r.ro.verdict === "BEST" ? "ok" : r.ro.verdict === "VALID" ? "am" : "bad"}">${dualBL(r.ro.feedback)}</div>` : ""}
